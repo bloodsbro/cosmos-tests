@@ -23,6 +23,21 @@ const latestBlockWithTxs = await client.getBlock();
 const transactions = latestBlockWithTxs.txs;
 
 const parsedTransactions = transactions.map(tx => parseTransaction(tx));
+
+const searchQuery = ref("");
+const searchResult = ref(null);
+
+const searchTransaction = async () => {
+  searchResult.value = await client.getTx(searchQuery.value);
+};
+
+const toObject = (val) => {
+  return JSON.parse(JSON.stringify(val, (key, value) =>
+    typeof value === 'bigint'
+      ? value.toString()
+      : value // return everything else unchanged
+  ));
+}
 </script>
 
 <template>
@@ -59,6 +74,22 @@ const parsedTransactions = transactions.map(tx => parseTransaction(tx));
             </v-list-item-content>
           </v-list-item>
         </v-list>
+      </v-card-text>
+    </v-card>
+    
+    <v-card style="margin-top: 25px;">
+      <v-card-title>Search for a Transaction</v-card-title>
+      <v-card-text>
+        <v-text-field
+          label="Enter Transaction Hash"
+          v-model="searchQuery"
+          @keyup.enter="searchTransaction"
+        ></v-text-field>
+        <v-btn @click="searchTransaction">Search</v-btn>
+        
+        <code>
+          {{ toObject(searchResult) }}
+        </code>
       </v-card-text>
     </v-card>
   </v-container>
