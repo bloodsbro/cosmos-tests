@@ -1,0 +1,133 @@
+<script setup lang="ts">
+import {ref, onMounted, computed} from 'vue';
+import { useWalletStore } from '~/stores/wallet';
+import { SigningCosmosClient} from "@cosmjs/launchpad";
+import {CosmWasmClient} from "@cosmjs/cosmwasm-stargate";
+import {SigningStargateClient} from "@cosmjs/stargate";
+const { rpcEndpoint } = useRuntimeConfig().public;
+
+const walletStore = useWalletStore();
+const keplrAddress = computed(() => walletStore.keplrAddress);
+
+const chainid = 'cosmoshub-4';
+const status = ref({
+  type: 'info',
+  message: import.meta.server ? 'Инициализация' : window.keplr ? `Ожидаем запрос` : 'Keplr не найден',
+});
+const balance = ref(null);
+const nfts = ref([]);
+const balanceStacked = ref(null);
+const delegation = ref(0);
+
+onMounted(async () => {
+  if (keplrAddress.value) {
+    status.value = {
+      type: 'success',
+      message: `Подключен: ${keplrAddress.value}`,
+    };
+    
+    await fetchData(keplrAddress.value);
+  }
+  
+  if (window.keplr) {
+    await window.keplr.enable(chainid);
+  }
+});
+
+const connectKeplr = async () => {
+  if (!window.keplr) {
+    status.value = {
+      type: 'error',
+      message: 'Keplr не найден',
+    };
+    
+    return;
+  }
+  
+  try {
+    const offlineSigner = window.getOfflineSigner(chainid);
+    const accounts = await offlineSigner.getAccounts();
+    const address = accounts[0].address;
+    
+    walletStore.setKeplrAddress(address);
+    status.value = {
+      type: 'success',
+      message: `Подключен: ${address}`,
+    };
+    
+    await fetchData(address);
+  } catch (error) {
+    console.error("Ошибка подключения Keplr:", error);
+    status.value = {
+      type: 'error',
+      message: `Ошибка подключения Keplr: ${error.message}`,
+    };
+  }
+};
+
+const fetchData = async (address: string) => {
+  await window.keplr.enable('cosmoshub-4');
+  
+  // Подключаемся к RPC-узлу
+  const client = await CosmWasmClient.connect(rpcEndpoint);
+  const client2 = await SigningStargateClient.connect(rpcEndpoint);
+  
+  if (walletStore.keplr.balances.length <= 0) {
+    walletStore.setKeplrBalances(await client2.getAllBalances(address));
+  }
+  
+  balance.value = walletStore.keplr.balances;
+  //
+  // if (walletStore.keplr.nfts.length <= 0) {
+  //   // Get the contracts for our simple counter
+  //   const contracts = await client.getContracts(1)
+  //
+  //   const contractAddress = contracts[0].address
+  //
+  //   const nfts = await client.queryContractSmart(
+  //     contractAddress, // Адрес контракта NFT
+  //     { tokens: { owner: address } } // Запрос с указанием владельца
+  //   );
+  //
+  //   console.log(nfts)
+  // }
+  
+  if (walletStore.keplr.delegation === null) {
+    walletStore.keplr.delegation = await client2.getDelegation(address, 'cosmosvaloper14l0fp639yudfl46zauvv8rkzjgd4u0zk2aseys') ?? 0;
+  }
+  
+  delegation.value = walletStore.keplr.delegation;
+  
+  if (walletStore.keplr.balanceStaked === null) {
+    walletStore.keplr.balanceStaked = await client2.getBalanceStaked(address) ?? 0;
+  }
+  
+  balanceStacked.value = walletStore.keplr.balanceStaked;
+};
+</script>
+
+<template>
+  <v-container class="mt-5">
+    <v-card class="pa-5">
+      <h2 class="text-center">Подключение Keplr</h2>
+      <v-alert
+        :type="status.type"
+        class="mb-4"
+        v-if="status.message"
+      >
+        {{ status.message }}
+      </v-alert>
+      <v-btn color="primary" block @click="connectKeplr">
+        Подключить Keplr
+      </v-btn>
+      
+      <v-card-title>Информация о балансе и NFT</v-card-title>
+      <v-card-text>
+        <div><strong>Баланс:</strong> {{ balance }}</div>
+        <div><strong>NFT:</strong> {{ nfts }}</div>
+        <div><strong>delegation:</strong> {{ delegation }}</div>
+        <div><strong>balanceStacked:</strong> {{ balanceStacked }}</div>
+      </v-card-text>
+    </v-card>
+  </v-container>
+</template>
