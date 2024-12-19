@@ -62,7 +62,7 @@ describe("IBC Transaction Utilities", () => {
           true,
           "dish random weapon thrive holiday fatigue glass junior lawsuit churn derive toss"
         )
-      ).rejects.toThrowError();
+      ).rejects.toThrowError('Error: Failed to retrieve account from signer');
     });
   });
 

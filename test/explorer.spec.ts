@@ -79,5 +79,10 @@ describe("Cosmos Transaction Utilities", () => {
       expect(txData?.gasWanted === 177456n)
       expect(JSON.stringify(txData?.msgResponses) === '[{"typeUrl":"/ibc.applications.transfer.v1.MsgTransferResponse","value":{"0":8,"1":188,"2":121}}]')
     });
+
+    it("should throw error when transaction hash is invalid", async () => {
+      const txHash = 'invalid';
+      await expect(getTransactionData(txHash)).rejects.toThrowError('{"code":-32603,"message":"Internal error","data":"error during searching for a hash in the query: encoding/hex: invalid byte: U+0069 \'i\'"}')
+    });
   });
 });
