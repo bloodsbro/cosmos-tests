@@ -5,6 +5,7 @@ import { SigningCosmosClient} from "@cosmjs/launchpad";
 import {CosmWasmClient} from "@cosmjs/cosmwasm-stargate";
 import {SigningStargateClient} from "@cosmjs/stargate";
 const { rpcEndpoint } = useRuntimeConfig().public;
+import { Window as KeplrWindow } from "@keplr-wallet/types"
 
 const walletStore = useWalletStore();
 const keplrAddress = computed(() => walletStore.keplrAddress);
@@ -12,7 +13,7 @@ const keplrAddress = computed(() => walletStore.keplrAddress);
 const chainid = 'cosmoshub-4';
 const status = ref({
   type: 'info',
-  message: import.meta.server ? 'Ініціалізація' : window.keplr ? `Очікуємо на запит` : 'Keplr не знайдений',
+  message: import.meta.server ? 'Ініціалізація' : KeplrWindow.keplr ? `Очікуємо на запит` : 'Keplr не знайдений',
 });
 const balance = ref(null);
 const nfts = ref([]);
@@ -29,13 +30,13 @@ onMounted(async () => {
     await fetchData(keplrAddress.value);
   }
   
-  if (window.keplr) {
-    await window.keplr.enable(chainid);
+  if (KeplrWindow.keplr) {
+    await KeplrWindow.keplr.enable(chainid);
   }
 });
 
 const connectKeplr = async () => {
-  if (!window.keplr) {
+  if (!KeplrWindow.keplr) {
     status.value = {
       type: 'error',
       message: 'Keplr не знайдений',
@@ -45,7 +46,7 @@ const connectKeplr = async () => {
   }
   
   try {
-    const offlineSigner = window.getOfflineSigner(chainid);
+    const offlineSigner = KeplrWindow.getOfflineSigner(chainid);
     const accounts = await offlineSigner.getAccounts();
     const address = accounts[0].address;
     
@@ -66,10 +67,8 @@ const connectKeplr = async () => {
 };
 
 const fetchData = async (address: string) => {
-  await window.keplr.enable('cosmoshub-4');
+  await KeplrWindow.keplr.enable('cosmoshub-4');
   
-  // Подключаемся к RPC-узлу
-  const client = await CosmWasmClient.connect(rpcEndpoint);
   const client2 = await SigningStargateClient.connect(rpcEndpoint);
   
   if (walletStore.keplr.balances.length <= 0) {
@@ -77,20 +76,6 @@ const fetchData = async (address: string) => {
   }
   
   balance.value = walletStore.keplr.balances;
-  //
-  // if (walletStore.keplr.nfts.length <= 0) {
-  //   // Get the contracts for our simple counter
-  //   const contracts = await client.getContracts(1)
-  //
-  //   const contractAddress = contracts[0].address
-  //
-  //   const nfts = await client.queryContractSmart(
-  //     contractAddress, // Адрес контракта NFT
-  //     { tokens: { owner: address } } // Запрос с указанием владельца
-  //   );
-  //
-  //   console.log(nfts)
-  // }
   
   if (walletStore.keplr.delegation === null) {
     walletStore.keplr.delegation = await client2.getDelegation(address, 'cosmosvaloper14l0fp639yudfl46zauvv8rkzjgd4u0zk2aseys') ?? 0;

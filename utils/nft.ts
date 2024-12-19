@@ -31,7 +31,10 @@ export const viewNFT = async (collectionAddr, tokenId) => {
 
     return response.data.token;
   } catch (error) {
-    console.error('Error fetching NFT details:', error);
+    if (process.env.NODE_ENV !== 'test') {
+      console.error('Error fetching NFT details:', error);
+    }
+
     throw new Error('Failed to fetch NFT details');
   }
 };
