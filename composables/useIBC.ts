@@ -2,11 +2,11 @@ import {MsgTransferEncodeObject, SigningStargateClient} from "@cosmjs/stargate";
 import {DirectSecp256k1HdWallet} from "@cosmjs/proto-signing";
 import {GasPrice} from "@cosmjs/stargate/build/fee";
 import {useRuntimeConfig} from "#app";
-import { Window as KeplrWindow } from "@keplr-wallet/types"
 
 export const getWallet = async (
   useMnemonic: boolean = false,
-  mnemonic: string | null = null
+  mnemonic: string | null = null,
+  chainId: string = 'cosmoshub-4'
 ) => {
   if (useMnemonic && typeof mnemonic !== 'string') {
     throw new Error('invalid mnemonic')
@@ -15,16 +15,17 @@ export const getWallet = async (
   return useMnemonic ? await DirectSecp256k1HdWallet.fromMnemonic(
     mnemonic,
     {prefix: "cosmos"}
-  ) : KeplrWindow.getOfflineSigner(chainId)
+  ) : window.getOfflineSigner(chainId)
 }
 
 export const getClient = async (
   useMnemonic: boolean = false,
-  mnemonic: string | null = null
+  mnemonic: string | null = null,
+  chainId: string = 'cosmoshub-4'
 ) => {
   const rpcEndpoint = useRuntimeConfig().public.rpcEndpoint
 
-  const wallet = await getWallet(useMnemonic, mnemonic);
+  const wallet = await getWallet(useMnemonic, mnemonic, chainId);
 
   const gasPrice = new GasPrice(2671, 'uatom');
 
@@ -43,7 +44,7 @@ export const simulateIBCTransaction = async (
   memo: string = ''
 ) => {
   try {
-    const client = await getClient(useMnemonic, mnemonic)
+    const client = await getClient(useMnemonic, mnemonic, chainId)
 
     const msgTransfer: MsgTransferEncodeObject = {
       typeUrl: "/ibc.applications.transfer.v1.MsgTransfer",
@@ -97,7 +98,7 @@ export const sendIBCTransaction = async (
       },
     };
 
-    const client = await getClient(useMnemonic, mnemonic);
+    const client = await getClient(useMnemonic, mnemonic, chainId);
 
     if (useMnemonic) {
       const sourceAccount = await client.getAccount(sourceAddress);
@@ -109,8 +110,8 @@ export const sendIBCTransaction = async (
     const gasEstimation = await simulateIBCTransaction(sourceAddress, destinationAddress, amount, chainId, useMnemonic, mnemonic, memo);
 
     return await client.signAndBroadcast(sourceAddress, [msgTransfer], {
-        amount: [{ denom: "uatom", amount: 2671 }],
-        gas: gasEstimation * 1.25,
+        amount: [{ denom: "uatom", amount: "2671" }],
+        gas: (gasEstimation * 1.25).toString(),
       }, memo
     );
   } catch (error) {
