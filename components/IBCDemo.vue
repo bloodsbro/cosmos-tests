@@ -12,32 +12,32 @@
       
       <v-form>
         <v-text-field
-          label="Ваш адрес (Cosmos)"
+          label="Ваша адреса (Cosmos)"
           v-model="keplrAddress"
           outlined
           required
         ></v-text-field>
         <v-text-field
-          label="Адрес получателя"
+          label="Адреса одержувача"
           v-model="receiveAddress"
           outlined
           required
         ></v-text-field>
         <v-text-field
-          label="Сумма для перевода (uatom)"
+          label="Сума для переказу (uatom)"
           type="number"
           v-model="amount"
           outlined
           required
         ></v-text-field>
-        <v-switch label="Использовать сид фразу?" v-model="useSeed">
+        <v-switch label="Використовувати сід фразу?" v-model="useSeed">
         </v-switch>
         <v-btn color="primary" class="mt-4" block @click="handleIBCTransfer">
           Отправить IBC перевод
         </v-btn>
       </v-form>
       <v-alert v-if="transactionResult" type="success" class="mt-4">
-        <p>Транзакция успешно выполнена!</p>
+        <p>Транзакцію успішно виконано!</p>
         <pre>{{ toObject(transactionResult) }}</pre>
       </v-alert>
     </v-card>
@@ -61,7 +61,7 @@ const useSeed = ref(false);
 
 const status = ref({
   type: 'info',
-  message: 'Ожидание команды',
+  message: 'Очікування команди',
 });
 const walletStore = useWalletStore();
 const keplrAddress = computed(() => walletStore.keplrAddress);
@@ -75,7 +75,6 @@ const handleIBCTransfer = async () => {
       keplrAddress.value,
       receiveAddress.value,
       amount.value,
-      "https://cors.standoffarena.com/https://cosmos-rpc.publicnode.com",
       "cosmoshub-4",
       useSeed.value
     );
@@ -450,7 +449,7 @@ const handleIBCTransfer = async () => {
   } catch (error) {
     status.value = {
       type: 'error',
-      message: `Ошибка при выполнении IBC перевода: ${error.message}.`,
+      message: `Помилка під час виконання IBC: ${error.message}.`,
     };
     console.error(error);
   }

@@ -1,7 +1,7 @@
 <template>
   <v-container class="mt-5">
     <v-card class="pa-5">
-      <h2 class="text-center">Выполнение контракта</h2>
+      <h2 class="text-center">Виконання контракту</h2>
       <v-alert
         :type="status.type"
         class="mb-4"
@@ -10,20 +10,25 @@
         {{ status.message }}
       </v-alert>
       <v-text-field
-        label="Адрес контракта"
+        label="Адреса контракту"
         v-model="contractAddress"
         outlined
-        class="mb-4"
       ></v-text-field>
+      Інформаця про контракт:
+      <v-textarea
+        readonly
+        rows="6"
+        :value="JSON.stringify(contract, null, 2)"
+      >
+      
+      </v-textarea>
       <v-textarea
         label="data"
         v-model="contractData"
         outlined
-        class="mb-4"
       ></v-textarea>
-      {{ contract }}
       <v-btn color="primary" block @click="executeContract">
-        Выполнить контракт
+        Виконати контракт
       </v-btn>
     </v-card>
   </v-container>
@@ -40,7 +45,7 @@ const contract = ref({});
 
 const status = ref({
   type: 'info',
-  message: 'Ожидание',
+  message: 'Очікування',
 });
 const contractAddress = ref<string>('cosmos18cszlvm6pze0x9sz32qnjq4vtd45xehqs8dq7cwy8yhq35wfnn3q795n8y');
 const contractData = ref(JSON.stringify({

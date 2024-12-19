@@ -1,9 +1,9 @@
 <template>
   <v-container>
     <v-card>
-      <v-card-title>Демонстрация NFT действий</v-card-title>
+      <v-card-title>Демонстрація NFT дій</v-card-title>
       <v-card-text>
-        <v-btn @click="handleViewNFT" :loading="loading">Просмотреть NFT</v-btn>
+        <v-btn @click="handleViewNFT" :loading="loading">Переглянути NFT</v-btn>
         
         <v-alert v-if="result" type="success">{{ result }}</v-alert>
         <v-alert v-if="error" type="error">{{ error }}</v-alert>

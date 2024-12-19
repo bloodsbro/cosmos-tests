@@ -12,7 +12,7 @@ const keplrAddress = computed(() => walletStore.keplrAddress);
 const chainid = 'cosmoshub-4';
 const status = ref({
   type: 'info',
-  message: import.meta.server ? 'Инициализация' : window.keplr ? `Ожидаем запрос` : 'Keplr не найден',
+  message: import.meta.server ? 'Ініціалізація' : window.keplr ? `Очікуємо на запит` : 'Keplr не знайдений',
 });
 const balance = ref(null);
 const nfts = ref([]);
@@ -23,7 +23,7 @@ onMounted(async () => {
   if (keplrAddress.value) {
     status.value = {
       type: 'success',
-      message: `Подключен: ${keplrAddress.value}`,
+      message: `Підключений: ${keplrAddress.value}`,
     };
     
     await fetchData(keplrAddress.value);
@@ -38,7 +38,7 @@ const connectKeplr = async () => {
   if (!window.keplr) {
     status.value = {
       type: 'error',
-      message: 'Keplr не найден',
+      message: 'Keplr не знайдений',
     };
     
     return;
@@ -52,15 +52,15 @@ const connectKeplr = async () => {
     walletStore.setKeplrAddress(address);
     status.value = {
       type: 'success',
-      message: `Подключен: ${address}`,
+      message: `Підключений: ${address}`,
     };
     
     await fetchData(address);
   } catch (error) {
-    console.error("Ошибка подключения Keplr:", error);
+    console.error("Помилка підключення Keplr:", error);
     status.value = {
       type: 'error',
-      message: `Ошибка подключения Keplr: ${error.message}`,
+      message: `Помилка підключення Keplr: ${error.message}`,
     };
   }
 };
@@ -109,7 +109,7 @@ const fetchData = async (address: string) => {
 <template>
   <v-container class="mt-5">
     <v-card class="pa-5">
-      <h2 class="text-center">Подключение Keplr</h2>
+      <h2 class="text-center">Підключення Keplr</h2>
       <v-alert
         :type="status.type"
         class="mb-4"
@@ -118,10 +118,10 @@ const fetchData = async (address: string) => {
         {{ status.message }}
       </v-alert>
       <v-btn color="primary" block @click="connectKeplr">
-        Подключить Keplr
+        Підключити Keplr
       </v-btn>
       
-      <v-card-title>Информация о балансе и NFT</v-card-title>
+      <v-card-title>Інформація про баланс і NFT</v-card-title>
       <v-card-text>
         <div><strong>Баланс:</strong> {{ balance }}</div>
         <div><strong>NFT:</strong> {{ nfts }}</div>

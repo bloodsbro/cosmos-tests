@@ -1,23 +1,7 @@
 <script setup lang="ts">
-import { StargateClient } from "@cosmjs/stargate";
-import { useRuntimeConfig } from "#app";
-import {Tx} from "cosmjs-types/cosmos/tx/v1beta1/tx";
+import { getClient, getTransactionData, parseTransaction } from '@/composables/useExplorer';
 
-const parseTransaction = (tx: Uint8Array) => {
-  const decodedTx = Tx.decode(tx);
-  const body = decodedTx.body;
-  
-  const messages = body.messages.map(msg => msg.typeUrl);
-  
-  return {
-    height: decodedTx?.height,
-    messages,
-    hash: decodedTx?.id,
-  };
-};
-
-const config = useRuntimeConfig();
-const client = await StargateClient.connect(config.public.rpcEndpoint);
+const client = await getClient();
 
 const latestBlockWithTxs = await client.getBlock();
 const transactions = latestBlockWithTxs.txs;
@@ -28,15 +12,32 @@ const searchQuery = ref("");
 const searchResult = ref(null);
 
 const searchTransaction = async () => {
-  searchResult.value = await client.getTx(searchQuery.value);
+  searchResult.value = await getTransactionData(searchQuery.value)
 };
 
-const toObject = (val) => {
-  return JSON.parse(JSON.stringify(val, (key, value) =>
-    typeof value === 'bigint'
-      ? value.toString()
-      : value // return everything else unchanged
-  ));
+const getDotColor = (type) => {
+  switch (type) {
+    case 'message':
+    case 'execute':
+    case 'tx':
+    case 'fee_pay':
+    case 'tip_pay':
+    case 'use_feegrant':
+    case 'update_feegrant':
+    case 'update_client':
+    case 'acknowledge_packet':
+    case 'fungible_token_packet':
+    case 'write_acknowledgement':
+    case 'recv_packet': return 'deep-purple-lighten-1'
+    case 'transfer':
+    case 'coin_received':
+    case 'coin_spent':
+    case 'withdraw_rewards': return 'green'
+    case 'wasm':
+    case 'instantiate':
+    case 'reply':
+    case 'update_contract_admin': return 'red'
+  }
 }
 </script>
 
@@ -53,14 +54,14 @@ const toObject = (val) => {
     </v-card>
     
     <v-card style="margin-top: 25px;">
-      <v-card-title>Transactions in Latest Block ({{ transactions.length }})</v-card-title>
+      <v-card-title>Transactions in Latest Block ({{ transactions?.length ?? 0 }})</v-card-title>
       <v-card-text>
         <v-list>
           <v-list-item-group v-if="parsedTransactions && parsedTransactions.length > 0">
             <v-list-item v-for="(tx, index) in parsedTransactions" :key="index">
               <v-list-item-content>
                 <v-list-item-title>
-                  Transaction {{ index + 1 }}: {{ tx.messages.join(', ') }}
+                  message actions used: {{ tx.messages }}
                 </v-list-item-title>
                 <v-list-item-subtitle>
                   {{ tx.hash }}
@@ -87,9 +88,46 @@ const toObject = (val) => {
         ></v-text-field>
         <v-btn @click="searchTransaction">Search</v-btn>
         
-        <code>
-          {{ toObject(searchResult) }}
-        </code>
+        <template v-if="searchResult">
+          <v-card class="mx-auto mt-2">
+            <v-toolbar color="transparent">
+              <template v-slot:prepend>
+                <v-btn icon="$menu"></v-btn>
+              </template>
+              
+              <v-toolbar-title class="text-h6">
+                Транзакція {{ searchResult.hash }} має висоту {{ searchResult.height }} складається з {{ searchResult.events.length }} евентів і завершена з кодом {{ searchResult.code }}
+              </v-toolbar-title>
+              
+              <template v-slot:append>
+                <v-btn icon="mdi-dots-vertical"></v-btn>
+              </template>
+            </v-toolbar>
+            
+            <v-card-text>
+              <div class="font-weight-bold ms-1 mb-2">Евенти транзакції</div>
+              
+              <v-timeline align="start" density="compact">
+                <v-timeline-item
+                  v-for="(event, idx) in searchResult.events"
+                  :key="idx"
+                  :dot-color="getDotColor(event.type)"
+                  size="x-small"
+                >
+                  <div class="mb-4">
+                    <div class="font-weight-normal">
+                      <strong>{{ event.type }}</strong>
+                    </div>
+                    
+                    <div v-for="desc in event.attributes">
+                      {{ desc.key }}: {{ desc.value }} <br />
+                    </div>
+                  </div>
+                </v-timeline-item>
+              </v-timeline>
+            </v-card-text>
+          </v-card>
+        </template>
       </v-card-text>
     </v-card>
   </v-container>

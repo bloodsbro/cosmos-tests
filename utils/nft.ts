@@ -1,7 +1,6 @@
 import gql from 'graphql-tag';
 
 export const viewNFT = async (collectionAddr, tokenId) => {
-  // Получаем Apollo Client из composable Nuxt 3
   const { clients } = useApollo();
 
   const query = gql`

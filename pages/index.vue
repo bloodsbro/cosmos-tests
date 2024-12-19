@@ -9,12 +9,12 @@
       </v-col>
       <v-col cols="12" md="6" class="mb-3">
         <v-btn block color="primary" :to="{ path: '/keplr' }">
-          Подключение Keplr
+          Підключення Keplr
         </v-btn>
       </v-col>
       <v-col cols="12" md="6" class="mb-3">
         <v-btn block color="primary" :to="{ path: '/contract' }">
-          Выполнение контракта
+          Виконання контракту
         </v-btn>
       </v-col>
       <v-col cols="12" md="6" class="mb-3">
