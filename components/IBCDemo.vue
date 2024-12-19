@@ -36,10 +36,6 @@
           Відправити IBC переказ
         </v-btn>
       </v-form>
-      <v-alert v-if="transactionResult" type="success" class="mt-4">
-        <p>Транзакцію успішно виконано!</p>
-        <pre>{{ toObject(transactionResult) }}</pre>
-      </v-alert>
     </v-card>
   </v-container>
 </template>
@@ -48,14 +44,6 @@
 import { ref } from 'vue';
 import { sendIBCTransaction } from '@/composables/useIBC';
 import { useWalletStore } from "~/stores/wallet";
-
-const toObject = (val) => {
-  return JSON.parse(JSON.stringify(val, (key, value) =>
-    typeof value === 'bigint'
-      ? value.toString()
-      : value // return everything else unchanged
-  ));
-}
 
 const useSeed = ref(false);
 
@@ -67,7 +55,6 @@ const walletStore = useWalletStore();
 const keplrAddress = computed(() => walletStore.keplrAddress);
 const receiveAddress = ref('osmo12wvpkpdp5dc2mz8teerqg0aq75f93w2df8guxh');
 const amount = ref(1);
-const transactionResult = ref(null);
 
 const handleIBCTransfer = async () => {
   try {
@@ -79,7 +66,10 @@ const handleIBCTransfer = async () => {
       useSeed.value
     );
     
-    transactionResult.value = result;
+    status.value = {
+      type: 'success',
+      message: `Транзакцію успішно виконано на висоті ${result.height}.`,
+    };
   } catch (error) {
     status.value = {
       type: 'error',
